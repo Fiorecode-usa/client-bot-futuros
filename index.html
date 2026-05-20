@@ -77,11 +77,12 @@
         <section id="risk-section" class="risk-section" hidden>
           <h2 class="keys-title">Configuración de trading</h2>
           <p class="keys-hint">
-            Margen <strong>isolated</strong> en cada entrada. Par BTC/USDC.
+            Margen <strong>isolated</strong>. El bot calcula el apalancamiento según tu saldo.
+            El % es la <strong>pérdida máxima</strong> si toca el stop loss.
           </p>
           <form id="form-risk">
             <label for="risk-percent">
-              Porcentaje del saldo (<span id="risk-value">2</span>%)
+              Pérdida máxima por operación (<span id="risk-value">2</span>% del saldo)
             </label>
             <input
               id="risk-percent"
@@ -93,24 +94,7 @@
               value="2"
             />
             <button type="submit" id="btn-save-risk" class="btn btn-secondary">
-              Guardar porcentaje
-            </button>
-          </form>
-          <form id="form-leverage" class="leverage-form">
-            <label for="leverage">
-              Apalancamiento (<span id="leverage-value">10</span>x)
-            </label>
-            <input
-              id="leverage"
-              name="leverage"
-              type="range"
-              min="1"
-              max="100"
-              step="1"
-              value="10"
-            />
-            <button type="submit" id="btn-save-leverage" class="btn btn-secondary">
-              Guardar apalancamiento
+              Guardar riesgo
             </button>
           </form>
         </section>

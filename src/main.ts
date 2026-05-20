@@ -1,6 +1,6 @@
 import './styles.css';
 import { registerSW } from 'virtual:pwa-register';
-import { lookupByEmail, setApiKeys, setLeverage, setRiskPercent, toggleBot, type LookupResult } from './api.js';
+import { lookupByEmail, setApiKeys, setRiskPercent, toggleBot, type LookupResult } from './api.js';
 
 registerSW({ immediate: true });
 
@@ -26,10 +26,6 @@ const formRisk = document.getElementById('form-risk') as HTMLFormElement;
 const riskInput = document.getElementById('risk-percent') as HTMLInputElement;
 const riskValue = document.getElementById('risk-value') as HTMLSpanElement;
 const btnSaveRisk = document.getElementById('btn-save-risk') as HTMLButtonElement;
-const formLeverage = document.getElementById('form-leverage') as HTMLFormElement;
-const leverageInput = document.getElementById('leverage') as HTMLInputElement;
-const leverageValue = document.getElementById('leverage-value') as HTMLSpanElement;
-const btnSaveLeverage = document.getElementById('btn-save-leverage') as HTMLButtonElement;
 
 let currentUser: LookupResult | null = null;
 let keysFormVisible = false;
@@ -75,8 +71,6 @@ function updateRiskSection(user: LookupResult | null) {
   if (user && paid) {
     riskInput.value = String(user.riskPercent);
     riskValue.textContent = String(user.riskPercent);
-    leverageInput.value = String(user.leverage);
-    leverageValue.textContent = String(user.leverage);
   }
 }
 
@@ -228,10 +222,6 @@ riskInput.addEventListener('input', () => {
   riskValue.textContent = riskInput.value;
 });
 
-leverageInput.addEventListener('input', () => {
-  leverageValue.textContent = leverageInput.value;
-});
-
 formRisk.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!currentUser) return;
@@ -242,31 +232,15 @@ formRisk.addEventListener('submit', async (e) => {
   try {
     const updated = await setRiskPercent(currentUser.uid, riskPercent);
     applyUserState(updated);
-    setStatus(`Operarás con el ${riskPercent}% de tu saldo total en USDC.`, 'success');
+    setStatus(
+      `Pérdida máxima configurada: ${riskPercent}% de tu saldo si toca el stop loss.`,
+      'success',
+    );
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Error al guardar';
     setStatus(msg, 'error');
   } finally {
     btnSaveRisk.disabled = false;
-  }
-});
-
-formLeverage.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  if (!currentUser) return;
-
-  const leverage = Number(leverageInput.value);
-  btnSaveLeverage.disabled = true;
-
-  try {
-    const updated = await setLeverage(currentUser.uid, leverage);
-    applyUserState(updated);
-    setStatus(`Apalancamiento configurado a ${Math.round(leverage)}x (isolated).`, 'success');
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Error al guardar';
-    setStatus(msg, 'error');
-  } finally {
-    btnSaveLeverage.disabled = false;
   }
 });
 
