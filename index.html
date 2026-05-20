@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="description" content="Control remoto del bot de futuros" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <title>Bot Futuros — Control</title>
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <div class="logo" aria-hidden="true">⚡</div>
+        <h1>Bot Futuros</h1>
+        <p class="subtitle">Control de tu bot</p>
+      </header>
+
+      <main class="card">
+        <form id="verify-form" novalidate>
+          <label for="email">Email registrado</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            placeholder="tu@email.com"
+            required
+          />
+          <button type="submit" id="btn-verify" class="btn btn-secondary">
+            Verificar cuenta
+          </button>
+        </form>
+
+        <div id="status" class="status" role="status" aria-live="polite" hidden></div>
+
+        <section id="keys-section" class="keys-section" hidden>
+          <h2 class="keys-title">API keys del exchange</h2>
+          <p class="keys-hint">Se guardan cifradas. Solo tú las configuras aquí.</p>
+          <form id="form-keys">
+            <label for="api-key">API Key</label>
+            <input id="api-key" name="apiKey" type="password" autocomplete="off" required minlength="8" />
+
+            <label for="secret-key">Secret Key</label>
+            <input
+              id="secret-key"
+              name="secretKey"
+              type="password"
+              autocomplete="off"
+              required
+              minlength="8"
+            />
+
+            <label for="exchange-id">Exchange (opcional)</label>
+            <input
+              id="exchange-id"
+              name="exchangeId"
+              type="text"
+              placeholder="binanceusdm"
+              maxlength="40"
+            />
+
+            <button type="submit" id="btn-save-keys" class="btn btn-secondary">
+              Guardar API keys
+            </button>
+          </form>
+          <button type="button" id="btn-toggle-keys" class="btn-link" hidden>
+            Cambiar API keys
+          </button>
+        </section>
+
+        <section id="risk-section" class="risk-section" hidden>
+          <h2 class="keys-title">Tamaño por operación</h2>
+          <p class="keys-hint">
+            % de tu saldo total (USDC en BTC/USDC). Margen <strong>isolated</strong> en cada entrada.
+          </p>
+          <form id="form-risk">
+            <label for="risk-percent">
+              Porcentaje del saldo (<span id="risk-value">2</span>%)
+            </label>
+            <input
+              id="risk-percent"
+              name="riskPercent"
+              type="range"
+              min="0.5"
+              max="100"
+              step="0.5"
+              value="2"
+            />
+            <button type="submit" id="btn-save-risk" class="btn btn-secondary">
+              Guardar porcentaje
+            </button>
+          </form>
+        </section>
+
+        <div class="actions">
+          <button type="button" id="btn-activate" class="btn btn-primary" disabled>
+            Activar bot
+          </button>
+          <button type="button" id="btn-deactivate" class="btn btn-outline" disabled hidden>
+            Desactivar bot
+          </button>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <p>Membresía activa requerida para operar.</p>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
