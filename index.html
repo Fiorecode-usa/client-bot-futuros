@@ -75,9 +75,9 @@
         </section>
 
         <section id="risk-section" class="risk-section" hidden>
-          <h2 class="keys-title">Tamaño por operación</h2>
+          <h2 class="keys-title">Configuración de trading</h2>
           <p class="keys-hint">
-            % de tu saldo total (USDC en BTC/USDC). Margen <strong>isolated</strong> en cada entrada.
+            Margen <strong>isolated</strong> en cada entrada. Par BTC/USDC.
           </p>
           <form id="form-risk">
             <label for="risk-percent">
@@ -94,6 +94,23 @@
             />
             <button type="submit" id="btn-save-risk" class="btn btn-secondary">
               Guardar porcentaje
+            </button>
+          </form>
+          <form id="form-leverage" class="leverage-form">
+            <label for="leverage">
+              Apalancamiento (<span id="leverage-value">10</span>x)
+            </label>
+            <input
+              id="leverage"
+              name="leverage"
+              type="range"
+              min="1"
+              max="100"
+              step="1"
+              value="10"
+            />
+            <button type="submit" id="btn-save-leverage" class="btn btn-secondary">
+              Guardar apalancamiento
             </button>
           </form>
         </section>

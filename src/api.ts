@@ -8,6 +8,7 @@ export interface LookupResult {
   hasApiKeys: boolean;
   isReadyToTrade: boolean;
   riskPercent: number;
+  leverage: number;
 }
 
 interface ApiEnvelope<T> {
@@ -56,7 +57,21 @@ function toLookupResult(data: UserPublic): LookupResult {
     hasApiKeys: data.hasApiKeys,
     isReadyToTrade: data.isReadyToTrade,
     riskPercent: data.riskPercent,
+    leverage: data.leverage,
   };
+}
+
+export async function setLeverage(uid: string, leverage: number): Promise<LookupResult> {
+  const res = await fetch(`${baseUrl}/api/v1/users/${uid}/leverage`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ leverage: Math.round(leverage) }),
+  });
+  if (!res.ok) {
+    throw new Error(await parseError(res));
+  }
+  const json = (await res.json()) as ApiEnvelope<UserPublic>;
+  return toLookupResult(json.data);
 }
 
 export async function setRiskPercent(uid: string, riskPercent: number): Promise<LookupResult> {
