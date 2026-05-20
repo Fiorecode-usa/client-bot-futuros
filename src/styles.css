@@ -255,3 +255,48 @@ input[type='range'] {
   font-size: 0.8rem;
   color: var(--muted);
 }
+
+.btn-install {
+  display: block;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.65rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--accent);
+  background: rgba(34, 211, 238, 0.1);
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-install[hidden] {
+  display: none;
+}
+
+.install-help {
+  margin-top: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(34, 211, 238, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  text-align: left;
+}
+
+.install-help[hidden] {
+  display: none;
+}
+
+.install-help strong {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.35rem;
+  color: var(--accent);
+}
+
+.install-help p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--muted);
+}

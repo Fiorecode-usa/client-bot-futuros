@@ -1,5 +1,8 @@
 import './styles.css';
+import { registerSW } from 'virtual:pwa-register';
 import { lookupByEmail, setApiKeys, setRiskPercent, toggleBot, type LookupResult } from './api.js';
+
+registerSW({ immediate: true });
 
 const STORAGE_KEY = 'bot-futuros-session';
 
@@ -249,4 +252,67 @@ const saved = loadSession();
 if (saved?.email) {
   emailInput.value = saved.email;
   void verifyEmail(saved.email);
+}
+
+const btnInstall = document.getElementById('btn-install') as HTMLButtonElement;
+const installHelp = document.getElementById('install-help') as HTMLElement;
+const installHelpText = document.getElementById('install-help-text') as HTMLParagraphElement;
+let installPrompt: BeforeInstallPromptEvent | null = null;
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
+const isStandalone =
+  window.matchMedia('(display-mode: standalone)').matches ||
+  (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+const isMobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+
+function setupInstallHelp(): void {
+  if (isStandalone || !isMobile) {
+    installHelp.hidden = true;
+    return;
+  }
+
+  installHelp.hidden = false;
+
+  if (!window.isSecureContext) {
+    installHelpText.textContent =
+      'Abriste la app por HTTP (ej. 192.168.x.x:5173). Chrome en Android no permite instalar PWAs sin HTTPS. Despliega el cliente en Railway/Netlify/Vercel y abre la URL https://…';
+    return;
+  }
+
+  installHelpText.textContent =
+    'Chrome: menú ⋮ (arriba a la derecha) → "Instalar aplicación" o "Añadir a pantalla de inicio". iPhone: Compartir → Añadir a pantalla de inicio.';
+}
+
+setupInstallHelp();
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  installPrompt = e as BeforeInstallPromptEvent;
+  btnInstall.hidden = false;
+  installHelpText.textContent =
+    'Pulsa "Instalar app" abajo o usa el menú ⋮ → Instalar aplicación.';
+});
+
+btnInstall.addEventListener('click', async () => {
+  if (!installPrompt) return;
+  await installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null;
+  btnInstall.hidden = true;
+});
+
+window.addEventListener('appinstalled', () => {
+  installPrompt = null;
+  btnInstall.hidden = true;
+  installHelp.hidden = true;
+});
+
+if (isStandalone) {
+  btnInstall.hidden = true;
+  installHelp.hidden = true;
 }

@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0f172a" />
     <meta name="description" content="Control remoto del bot de futuros" />
-    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Bot Futuros" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="icon" type="image/png" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-512.png" />
     <title>Bot Futuros — Control</title>
   </head>
   <body>
@@ -105,6 +110,13 @@
 
       <footer class="footer">
         <p>Membresía activa requerida para operar.</p>
+        <div id="install-help" class="install-help" hidden>
+          <strong>📲 Instalar en el celular</strong>
+          <p id="install-help-text"></p>
+        </div>
+        <button type="button" id="btn-install" class="btn-install" hidden>
+          Instalar app
+        </button>
       </footer>
     </div>
     <script type="module" src="/src/main.ts"></script>
