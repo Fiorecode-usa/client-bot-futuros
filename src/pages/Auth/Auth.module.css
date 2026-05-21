@@ -1,0 +1,224 @@
+.shell {
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  padding: 32px;
+  animation: fadeIn 0.3s ease;
+}
+
+.right {
+  flex: 1.2;
+  background:
+    radial-gradient(800px 600px at 60% 40%, rgba(108, 140, 255, 0.18), transparent 60%),
+    radial-gradient(900px 600px at 30% 90%, rgba(30, 194, 139, 0.1), transparent 60%),
+    var(--bg-1);
+  display: flex;
+  flex-direction: column;
+  padding: 64px;
+  position: relative;
+  overflow: hidden;
+  justify-content: center;
+}
+
+.right::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 70%);
+  pointer-events: none;
+}
+
+.rightContent {
+  position: relative;
+  z-index: 1;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rightTag {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--brand);
+  border: 1px solid rgba(108, 140, 255, 0.3);
+  background: var(--brand-dim);
+  padding: 5px 12px;
+  border-radius: 999px;
+  width: fit-content;
+}
+
+.rightTitle {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.7px;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.rightSub {
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.rightBullets {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.bullet {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.bulletDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand);
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 36px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-2);
+}
+
+.brand {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.logo {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-strong) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: white;
+  font-size: 14px;
+  box-shadow: 0 4px 14px rgba(108, 140, 255, 0.4);
+}
+
+.brandText {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.brandSub {
+  display: block;
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: 22px;
+  margin: 0 0 6px 0;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.subtitle {
+  color: var(--text-3);
+  font-size: 13.5px;
+  margin: 0 0 26px 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.altLink {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-3);
+  margin-top: 14px;
+}
+
+.altLink a {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.forgotRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -4px;
+}
+
+.linkBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  color: var(--brand);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.linkBtn:hover {
+  color: var(--brand-strong);
+}
+
+.alert {
+  background: var(--red-dim);
+  border: 1px solid rgba(255, 85, 114, 0.3);
+  color: var(--red);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .shell {
+    flex-direction: column;
+  }
+  .right {
+    display: none;
+  }
+}

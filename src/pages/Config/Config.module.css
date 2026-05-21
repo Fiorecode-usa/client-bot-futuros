@@ -1,0 +1,101 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 720px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  margin: 0;
+}
+
+.subtitle {
+  color: var(--text-3);
+  font-size: 13.5px;
+  margin: 6px 0 0 0;
+}
+
+.card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cardTitle {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.cardDescription {
+  color: var(--text-3);
+  font-size: 12.5px;
+  margin: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.row > * {
+  flex: 1 1 220px;
+}
+
+.notice {
+  background: var(--brand-dim);
+  border: 1px solid rgba(108, 140, 255, 0.3);
+  color: var(--text-2);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.alert {
+  background: var(--red-dim);
+  border: 1px solid rgba(255, 85, 114, 0.3);
+  color: var(--red);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.success {
+  background: var(--green-dim);
+  border: 1px solid rgba(30, 194, 139, 0.3);
+  color: var(--green);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.statusRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cta {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-top: 4px;
+}

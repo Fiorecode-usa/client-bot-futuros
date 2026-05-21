@@ -1,42 +1,75 @@
-# Client Bot Futuros (PWA)
+# React + TypeScript + Vite
 
-Panel de control instalable: el usuario ingresa su email, se verifica en DynamoDB vía la API y, si `pagoValido = TRUE`, puede activar el bot.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Requisitos
+Currently, two official plugins are available:
 
-- Backend `bot-futuros` en ejecución (`npm run dev`, puerto 3000 por defecto)
-- Usuario registrado con pago activo (admin: `PATCH /api/v1/users/:uid/payment`)
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Desarrollo
+## React Compiler
 
-```bash
-cd client-bot-futuros
-npm install
-npm run dev
+The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+
+Note: This will impact Vite dev & build performances.
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
+
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
-Abre `http://localhost:5173`. Las peticiones a `/api` se redirigen al backend (proxy en `vite.config.ts`).
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-## Producción
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-```bash
-cp .env.example .env
-# VITE_API_URL=https://tu-api.railway.app
-
-npm run build
-npm run preview
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-
-Sirve la carpeta `dist/` en cualquier host estático (Netlify, Vercel, Cloudflare Pages, etc.).
-
-## Flujo
-
-1. **Verificar cuenta** → `POST /api/v1/users/lookup` con `{ "email": "..." }`
-2. Si `pagoValido === "TRUE"` y hay API keys → botón **Activar bot** habilitado
-3. **Activar** → `POST /api/v1/users/:uid/toggle-bot` con `{ "active": true }`
-
-La sesión (email + uid) se guarda en `localStorage` para revalidar al volver.
-
-## Instalar como PWA
-
-En Chrome/Edge: menú → *Instalar aplicación*. En móvil: *Añadir a pantalla de inicio*.
