@@ -75,7 +75,9 @@ export function StrategyMonitor({ telemetry, running }: StrategyMonitorProps): J
     ? 'neutral'
     : telemetry.marketAlive
       ? 'ok'
-      : 'bad';
+      : telemetry.marketWsConnected
+        ? 'warn'
+        : 'bad';
 
   const volTone: DotTone = !running
     ? 'neutral'
@@ -126,12 +128,20 @@ export function StrategyMonitor({ telemetry, running }: StrategyMonitorProps): J
             tone={marketTone}
             value={
               running
-                ? telemetry.marketAlive
-                  ? `Vivo · ${fmtPrice(telemetry.lastPrice)}`
-                  : 'Sin ticks recientes'
+                ? !telemetry.marketWsConnected
+                  ? 'WS desconectado — reconectando'
+                  : telemetry.marketAlive
+                    ? `Vivo · ${fmtPrice(telemetry.lastPrice)}`
+                    : 'Sin ticks recientes'
                 : 'Bot detenido'
             }
-            hint={running ? `Último tick hace ${fmtAge(telemetry.lastTickAgeMs)}` : undefined}
+            hint={
+              running
+                ? telemetry.marketWsConnected
+                  ? `Último tick hace ${fmtAge(telemetry.lastTickAgeMs)}`
+                  : 'Comprobando conexión con Binance…'
+                : undefined
+            }
           />
           <CheckItem
             label="Volatilidad 5–90%"
@@ -194,9 +204,11 @@ export function StrategyMonitor({ telemetry, running }: StrategyMonitorProps): J
                 : `$${telemetry.risk.equity.toFixed(0)} equity`
             }
             hint={
-              telemetry.risk.canTrade
-                ? 'Puede operar'
-                : `Mínimo $${telemetry.risk.minEquity} · sin posición`
+              telemetry.risk.hasOpenPosition
+                ? 'Cierra la posición en Binance para nuevas entradas'
+                : telemetry.risk.canTrade
+                  ? 'Puede operar'
+                  : `$${telemetry.risk.equity.toFixed(0)} equity · mínimo $${telemetry.risk.minEquity}`
             }
           />
         </div>

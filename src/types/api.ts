@@ -131,6 +131,7 @@ export interface StrategyTelemetry {
   symbol: string;
   running: boolean;
   marketAlive: boolean;
+  marketWsConnected: boolean;
   lastTickAgeMs: number | null;
   lastPrice: number | null;
   sessionState: string;
