@@ -181,6 +181,7 @@ export interface StrategyTelemetry {
     at: string;
   };
   recentEvents: StrategyEvent[];
+  livePosition: LivePositionView | null;
 }
 
 export interface StrategyDiagnosticsResponse {

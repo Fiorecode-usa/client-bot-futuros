@@ -46,7 +46,8 @@ function fmt(num: number, digits = 2): string {
 }
 
 const MAX_PRICE_POINTS = 180;
-const POSITION_POLL_MS = 8_000;
+/** Solo si el bot está apagado: poll REST como respaldo (mín. 60 s en server). */
+const IDLE_POSITION_POLL_MS = 60_000;
 
 function appendPricePoint(prev: PricePoint[], price: number): PricePoint[] {
   if (!Number.isFinite(price) || price <= 0) return prev;
@@ -72,7 +73,7 @@ export function HomePage(): JSX.Element {
   const hadPositionRef = useRef<boolean>(false);
 
   const refreshLivePosition = useCallback(async () => {
-    if (!configured) return;
+    if (!configured || running) return;
     try {
       const pos = await tradingApi.livePosition();
       setLivePosition(pos);
@@ -86,7 +87,7 @@ export function HomePage(): JSX.Element {
     } catch {
       // ignore polling errors
     }
-  }, [configured]);
+  }, [configured, running]);
 
   const refreshAll = useCallback(async () => {
     try {
@@ -109,7 +110,9 @@ export function HomePage(): JSX.Element {
         } catch {
           // ignore balance read issues
         }
-        await refreshLivePosition();
+        if (!status.running) {
+          await refreshLivePosition();
+        }
       }
     } catch (err) {
       const msg =
@@ -121,19 +124,12 @@ export function HomePage(): JSX.Element {
   }, [refreshLivePosition]);
 
   useEffect(() => {
-    if (!configured) return;
+    if (!configured || running) return;
     const id = window.setInterval(() => {
       void refreshLivePosition();
-    }, POSITION_POLL_MS);
+    }, IDLE_POSITION_POLL_MS);
     return () => window.clearInterval(id);
-  }, [configured, refreshLivePosition]);
-
-  useEffect(() => {
-    const price = strategyTelemetry?.lastPrice;
-    if (price != null && livePosition?.hasPosition) {
-      setPriceHistory((prev) => appendPricePoint(prev, price));
-    }
-  }, [strategyTelemetry?.lastPrice, livePosition?.hasPosition]);
+  }, [configured, running, refreshLivePosition]);
 
   useEffect(() => {
     void refreshAll();
@@ -155,26 +151,39 @@ export function HomePage(): JSX.Element {
     };
     const onStrategySnapshot = (payload: { telemetry: StrategyTelemetry }): void => {
       setStrategyTelemetry(payload.telemetry);
+      if (payload.telemetry.livePosition != null) {
+        setLivePosition(payload.telemetry.livePosition);
+        if (payload.telemetry.livePosition.hasPosition) {
+          hadPositionRef.current = true;
+          const px =
+            payload.telemetry.lastPrice ?? payload.telemetry.livePosition.markPrice ?? null;
+          if (px != null) {
+            setPriceHistory((prev) => appendPricePoint(prev, px));
+          }
+        } else if (hadPositionRef.current) {
+          hadPositionRef.current = false;
+          setPriceHistory([]);
+        }
+      }
     };
-    const onPnlWithRefresh = (payload: { openPnl: number; equity: number }): void => {
+    const onPnl = (payload: { openPnl: number; equity: number }): void => {
       setOpenPnl(payload.openPnl);
-      void refreshLivePosition();
     };
 
     socket.on('status', onStatus);
     socket.on('balance', onBalance);
-    socket.on('pnl', onPnlWithRefresh);
+    socket.on('pnl', onPnl);
     socket.on('trade', onTrade);
     socket.on('strategy:snapshot', onStrategySnapshot);
 
     return () => {
       socket.off('status', onStatus);
       socket.off('balance', onBalance);
-      socket.off('pnl', onPnlWithRefresh);
+      socket.off('pnl', onPnl);
       socket.off('trade', onTrade);
       socket.off('strategy:snapshot', onStrategySnapshot);
     };
-  }, [socket, refreshAll, refreshLivePosition]);
+  }, [socket, refreshAll]);
 
   const livePrice = useMemo(() => {
     return strategyTelemetry?.lastPrice ?? livePosition?.markPrice ?? null;
@@ -258,7 +267,7 @@ export function HomePage(): JSX.Element {
         </div>
       )}
 
-      <div className={styles.metrics}>
+      <div className={styles.metricsTop}>
         <Metric
           label="Balance (USDC)"
           value={balance ? `$${fmt(balance.usdc)}` : '$0.00'}
@@ -290,20 +299,30 @@ export function HomePage(): JSX.Element {
           value={String(session?.totalTrades ?? 0)}
           hint={`Ganadas ${session?.winningTrades ?? 0} · Perdidas ${session?.losingTrades ?? 0}`}
         />
-        <Metric
-          label="Winrate"
-          value={`${fmt(winrate, 1)}%`}
-          trend={winrate >= 50 ? 'positive' : 'neutral'}
-        />
       </div>
 
-      <StrategyMonitor telemetry={strategyTelemetry} running={running} />
-
-      <PositionLiveChart
-        position={livePosition}
-        priceHistory={priceHistory}
-        livePrice={livePrice}
-      />
+      <div className={styles.mainGrid}>
+        <div className={styles.leftCol}>
+          <Metric
+            label="Winrate"
+            value={`${fmt(winrate, 1)}%`}
+            trend={winrate >= 50 ? 'positive' : 'neutral'}
+            hint={
+              session && session.totalTrades > 0
+                ? `${session.winningTrades} ganadas de ${session.totalTrades}`
+                : 'Sin operaciones cerradas'
+            }
+          />
+          <StrategyMonitor telemetry={strategyTelemetry} running={running} />
+        </div>
+        <div className={styles.rightCol}>
+          <PositionLiveChart
+            position={livePosition}
+            priceHistory={priceHistory}
+            livePrice={livePrice}
+          />
+        </div>
+      </div>
 
       <div className={styles.section}>
         <div className={styles.sectionHeader}>

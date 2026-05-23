@@ -32,16 +32,37 @@
   gap: 10px;
 }
 
-.metrics {
-  display: flex;
-  flex-direction: row;
+.metricsTop {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 16px;
-  flex-wrap: wrap;
 }
 
-.metrics > * {
-  flex: 1 1 220px;
-  min-width: 200px;
+.mainGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.leftCol,
+.rightCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .metricsTop {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .section {

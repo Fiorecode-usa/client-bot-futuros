@@ -48,32 +48,55 @@ export function PositionLiveChart({
     if (!position?.hasPosition) return null;
 
     const levels: LevelLine[] = [];
-    if (position.entryPrice != null) {
+    if (position.entryPrice != null && position.entryPrice > 0) {
       levels.push({ label: 'Entrada', price: position.entryPrice, color: COLORS.entry });
     }
-    if (position.stopLoss != null) {
+    if (position.stopLoss != null && position.stopLoss > 0) {
       levels.push({ label: 'SL', price: position.stopLoss, color: COLORS.stop });
     }
     position.takeProfits.forEach((tp, i) => {
-      levels.push({ label: `TP${i + 1}`, price: tp, color: COLORS.tp });
+      if (tp > 0) levels.push({ label: `TP${i + 1}`, price: tp, color: COLORS.tp });
     });
 
-    const prices = [
+    const current = livePrice ?? position.markPrice ?? null;
+
+    // Eje Y anclado a niveles de trade + precio actual (siempre visibles)
+    const anchorPrices = [
       ...levels.map((l) => l.price),
-      ...priceHistory.map((p) => p.p),
-      livePrice ?? position.markPrice ?? position.entryPrice ?? 0,
+      ...(current != null && current > 0 ? [current] : []),
     ].filter((p) => p > 0);
 
-    if (prices.length === 0) return null;
+    if (anchorPrices.length === 0) return null;
 
-    let min = Math.min(...prices);
-    let max = Math.max(...prices);
-    const span = max - min || max * 0.002 || 1;
-    min -= span * 0.12;
-    max += span * 0.12;
+    let min = Math.min(...anchorPrices);
+    let max = Math.max(...anchorPrices);
+
+    for (const pt of priceHistory) {
+      if (pt.p > 0) {
+        min = Math.min(min, pt.p);
+        max = Math.max(max, pt.p);
+      }
+    }
+
+    const mid = (min + max) / 2;
+    const minSpan = Math.max(mid * 0.0015, 80);
+    if (max - min < minSpan) {
+      min = mid - minSpan / 2;
+      max = mid + minSpan / 2;
+    }
+
+    const span = max - min;
+    min -= span * 0.14;
+    max += span * 0.14;
 
     const yFor = (price: number): number =>
       pad.top + innerH - ((price - min) / (max - min)) * innerH;
+
+    const labelY = (y: number): number => {
+      if (y < pad.top + 10) return pad.top + 12;
+      if (y > pad.top + innerH - 6) return pad.top + innerH - 2;
+      return y + 4;
+    };
 
     const times = priceHistory.map((p) => p.t);
     const tMin = times.length > 0 ? times[0]! : Date.now() - 60_000;
@@ -92,11 +115,10 @@ export function PositionLiveChart({
             .join(' ')
         : '';
 
-    const current = livePrice ?? position.markPrice;
     const currentY = current != null ? yFor(current) : null;
     const currentX = pad.left + innerW;
 
-    return { W, H, levels, yFor, path, current, currentX, currentY, min, max };
+    return { W, H, pad, innerH, levels, yFor, labelY, path, current, currentX, currentY, min, max };
   }, [position, priceHistory, livePrice]);
 
   if (!position?.hasPosition) {
@@ -173,31 +195,33 @@ export function PositionLiveChart({
             <svg
               className={styles.chartSvg}
               viewBox={`0 0 ${chart.W} ${chart.H}`}
-              preserveAspectRatio="none"
+              preserveAspectRatio="xMidYMid meet"
               role="img"
               aria-label="Gráfico de precio en vivo con niveles de entrada, stop y take profit"
             >
               {chart.levels.map((level) => {
                 const y = chart.yFor(level.price);
+                const clampedY = Math.max(chart.pad.top + 2, Math.min(chart.pad.top + chart.innerH - 2, y));
                 return (
                   <g key={`${level.label}-${level.price}`}>
                     <line
                       x1={12}
-                      y1={y}
+                      y1={clampedY}
                       x2={chart.W - 72}
-                      y2={y}
+                      y2={clampedY}
                       stroke={level.color}
-                      strokeWidth={1.5}
+                      strokeWidth={level.label === 'Entrada' ? 2 : 1.5}
                       strokeDasharray={level.label === 'Entrada' ? '0' : '6 4'}
-                      opacity={0.85}
+                      opacity={0.9}
                     />
                     <text
                       x={chart.W - 8}
-                      y={y + 4}
+                      y={chart.labelY(y)}
                       fill={level.color}
                       fontSize={11}
                       fontFamily="var(--font-mono)"
                       textAnchor="end"
+                      fontWeight={level.label === 'Entrada' ? 600 : 400}
                     >
                       {level.label} {fmt(level.price)}
                     </text>
@@ -236,7 +260,7 @@ export function PositionLiveChart({
                   />
                   <text
                     x={chart.currentX - 8}
-                    y={chart.currentY - 10}
+                    y={chart.labelY(chart.currentY)}
                     fill={COLORS.price}
                     fontSize={11}
                     fontFamily="var(--font-mono)"
