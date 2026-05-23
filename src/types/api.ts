@@ -187,3 +187,24 @@ export interface StrategyDiagnosticsResponse {
   telemetry: StrategyTelemetry;
   running: boolean;
 }
+
+export interface LivePositionView {
+  hasPosition: boolean;
+  symbol: string;
+  side: 'LONG' | 'SHORT' | null;
+  quantity: number;
+  entryPrice: number | null;
+  markPrice: number | null;
+  unrealizedPnl: number;
+  stopLoss: number | null;
+  takeProfits: number[];
+  liquidationPrice: number | null;
+  leverage: number | null;
+  openedByBot: boolean;
+  source: 'binance';
+}
+
+export interface PricePoint {
+  t: number;
+  p: number;
+}

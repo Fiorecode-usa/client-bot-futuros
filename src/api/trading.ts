@@ -2,6 +2,7 @@ import { api } from './client';
 import type {
   PositionRecord,
   SessionStatus,
+  LivePositionView,
   StrategyDiagnosticsResponse,
   TradeRecord,
   TradingSession,
@@ -30,6 +31,10 @@ export const tradingApi = {
   },
   async diagnostics(): Promise<StrategyDiagnosticsResponse> {
     const { data } = await api.get<StrategyDiagnosticsResponse>('/trading/diagnostics');
+    return data;
+  },
+  async livePosition(): Promise<LivePositionView> {
+    const { data } = await api.get<LivePositionView>('/trading/live-position');
     return data;
   },
 };

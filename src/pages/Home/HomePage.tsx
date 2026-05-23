@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { AxiosError } from 'axios';
 import { Metric } from '../../components/Card/Card';
-import { Card } from '../../components/Card/Card';
 import { Badge } from '../../components/Badge/Badge';
 import { Button } from '../../components/Button/Button';
 import { useSocket } from '../../hooks/useSocket';
@@ -10,12 +9,15 @@ import { tradingApi } from '../../api/trading';
 import { exchangesApi } from '../../api/exchanges';
 import type {
   BalanceResponse,
+  LivePositionView,
+  PricePoint,
   SessionState,
   StrategyTelemetry,
   TradeRecord,
   TradingSession,
 } from '../../types/api';
 import { StrategyMonitor } from '../../components/StrategyMonitor/StrategyMonitor';
+import { PositionLiveChart } from '../../components/PositionLiveChart/PositionLiveChart';
 import styles from './Home.module.css';
 
 function stateTone(state: SessionState): 'green' | 'red' | 'brand' | 'yellow' | 'neutral' {
@@ -43,6 +45,17 @@ function fmt(num: number, digits = 2): string {
   });
 }
 
+const MAX_PRICE_POINTS = 180;
+const POSITION_POLL_MS = 8_000;
+
+function appendPricePoint(prev: PricePoint[], price: number): PricePoint[] {
+  if (!Number.isFinite(price) || price <= 0) return prev;
+  const now = Date.now();
+  const last = prev[prev.length - 1];
+  if (last && last.p === price && now - last.t < 1500) return prev;
+  return [...prev, { t: now, p: price }].slice(-MAX_PRICE_POINTS);
+}
+
 export function HomePage(): JSX.Element {
   const { socket } = useSocket();
   const [session, setSession] = useState<TradingSession | null>(null);
@@ -54,6 +67,26 @@ export function HomePage(): JSX.Element {
   const [actionBusy, setActionBusy] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [strategyTelemetry, setStrategyTelemetry] = useState<StrategyTelemetry | null>(null);
+  const [livePosition, setLivePosition] = useState<LivePositionView | null>(null);
+  const [priceHistory, setPriceHistory] = useState<PricePoint[]>([]);
+  const hadPositionRef = useRef<boolean>(false);
+
+  const refreshLivePosition = useCallback(async () => {
+    if (!configured) return;
+    try {
+      const pos = await tradingApi.livePosition();
+      setLivePosition(pos);
+      if (pos.hasPosition && pos.markPrice != null) {
+        setPriceHistory((prev) => appendPricePoint(prev, pos.markPrice!));
+      }
+      if (hadPositionRef.current && !pos.hasPosition) {
+        setPriceHistory([]);
+      }
+      hadPositionRef.current = pos.hasPosition;
+    } catch {
+      // ignore polling errors
+    }
+  }, [configured]);
 
   const refreshAll = useCallback(async () => {
     try {
@@ -76,6 +109,7 @@ export function HomePage(): JSX.Element {
         } catch {
           // ignore balance read issues
         }
+        await refreshLivePosition();
       }
     } catch (err) {
       const msg =
@@ -84,7 +118,22 @@ export function HomePage(): JSX.Element {
           : 'Error cargando datos';
       setError(msg);
     }
-  }, []);
+  }, [refreshLivePosition]);
+
+  useEffect(() => {
+    if (!configured) return;
+    const id = window.setInterval(() => {
+      void refreshLivePosition();
+    }, POSITION_POLL_MS);
+    return () => window.clearInterval(id);
+  }, [configured, refreshLivePosition]);
+
+  useEffect(() => {
+    const price = strategyTelemetry?.lastPrice;
+    if (price != null && livePosition?.hasPosition) {
+      setPriceHistory((prev) => appendPricePoint(prev, price));
+    }
+  }, [strategyTelemetry?.lastPrice, livePosition?.hasPosition]);
 
   useEffect(() => {
     void refreshAll();
@@ -100,9 +149,6 @@ export function HomePage(): JSX.Element {
     const onBalance = (payload: { balance: number; equity: number }): void => {
       setBalance((b) => (b ? { ...b, usdc: payload.balance } : { usdc: payload.balance, usdcAvailable: payload.balance, usdt: 0 }));
     };
-    const onPnl = (payload: { openPnl: number; equity: number }): void => {
-      setOpenPnl(payload.openPnl);
-    };
     const onTrade = (payload: { trade: TradeRecord }): void => {
       setTrades((prev) => [payload.trade, ...prev].slice(0, 20));
       void refreshAll();
@@ -110,21 +156,29 @@ export function HomePage(): JSX.Element {
     const onStrategySnapshot = (payload: { telemetry: StrategyTelemetry }): void => {
       setStrategyTelemetry(payload.telemetry);
     };
+    const onPnlWithRefresh = (payload: { openPnl: number; equity: number }): void => {
+      setOpenPnl(payload.openPnl);
+      void refreshLivePosition();
+    };
 
     socket.on('status', onStatus);
     socket.on('balance', onBalance);
-    socket.on('pnl', onPnl);
+    socket.on('pnl', onPnlWithRefresh);
     socket.on('trade', onTrade);
     socket.on('strategy:snapshot', onStrategySnapshot);
 
     return () => {
       socket.off('status', onStatus);
       socket.off('balance', onBalance);
-      socket.off('pnl', onPnl);
+      socket.off('pnl', onPnlWithRefresh);
       socket.off('trade', onTrade);
       socket.off('strategy:snapshot', onStrategySnapshot);
     };
-  }, [socket, refreshAll]);
+  }, [socket, refreshAll, refreshLivePosition]);
+
+  const livePrice = useMemo(() => {
+    return strategyTelemetry?.lastPrice ?? livePosition?.markPrice ?? null;
+  }, [strategyTelemetry?.lastPrice, livePosition?.markPrice]);
 
   const equity = useMemo(() => {
     const b = balance?.usdc ?? 0;
@@ -244,6 +298,12 @@ export function HomePage(): JSX.Element {
       </div>
 
       <StrategyMonitor telemetry={strategyTelemetry} running={running} />
+
+      <PositionLiveChart
+        position={livePosition}
+        priceHistory={priceHistory}
+        livePrice={livePrice}
+      />
 
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
