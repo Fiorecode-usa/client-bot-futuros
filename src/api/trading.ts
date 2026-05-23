@@ -2,6 +2,7 @@ import { api } from './client';
 import type {
   PositionRecord,
   SessionStatus,
+  StrategyDiagnosticsResponse,
   TradeRecord,
   TradingSession,
 } from '../types/api';
@@ -25,6 +26,10 @@ export const tradingApi = {
   },
   async trades(limit = 50): Promise<TradeRecord[]> {
     const { data } = await api.get<TradeRecord[]>('/trading/trades', { params: { limit } });
+    return data;
+  },
+  async diagnostics(): Promise<StrategyDiagnosticsResponse> {
+    const { data } = await api.get<StrategyDiagnosticsResponse>('/trading/diagnostics');
     return data;
   },
 };

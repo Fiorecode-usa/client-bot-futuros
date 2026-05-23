@@ -11,9 +11,11 @@ import { exchangesApi } from '../../api/exchanges';
 import type {
   BalanceResponse,
   SessionState,
+  StrategyTelemetry,
   TradeRecord,
   TradingSession,
 } from '../../types/api';
+import { StrategyMonitor } from '../../components/StrategyMonitor/StrategyMonitor';
 import styles from './Home.module.css';
 
 function stateTone(state: SessionState): 'green' | 'red' | 'brand' | 'yellow' | 'neutral' {
@@ -51,19 +53,22 @@ export function HomePage(): JSX.Element {
   const [configured, setConfigured] = useState<boolean>(true);
   const [actionBusy, setActionBusy] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const [strategyTelemetry, setStrategyTelemetry] = useState<StrategyTelemetry | null>(null);
 
   const refreshAll = useCallback(async () => {
     try {
-      const [status, exchStatus, recent] = await Promise.all([
+      const [status, exchStatus, recent, diagnostics] = await Promise.all([
         tradingApi.status(),
         exchangesApi.status(),
         tradingApi.trades(20),
+        tradingApi.diagnostics().catch(() => null),
       ]);
       setSession(status.session);
       setRunning(status.running);
       setOpenPnl(status.session.openPnl);
       setConfigured(exchStatus.configured);
       setTrades(recent);
+      if (diagnostics) setStrategyTelemetry(diagnostics.telemetry);
       if (exchStatus.configured) {
         try {
           const b = await exchangesApi.balance();
@@ -102,17 +107,22 @@ export function HomePage(): JSX.Element {
       setTrades((prev) => [payload.trade, ...prev].slice(0, 20));
       void refreshAll();
     };
+    const onStrategySnapshot = (payload: { telemetry: StrategyTelemetry }): void => {
+      setStrategyTelemetry(payload.telemetry);
+    };
 
     socket.on('status', onStatus);
     socket.on('balance', onBalance);
     socket.on('pnl', onPnl);
     socket.on('trade', onTrade);
+    socket.on('strategy:snapshot', onStrategySnapshot);
 
     return () => {
       socket.off('status', onStatus);
       socket.off('balance', onBalance);
       socket.off('pnl', onPnl);
       socket.off('trade', onTrade);
+      socket.off('strategy:snapshot', onStrategySnapshot);
     };
   }, [socket, refreshAll]);
 
@@ -232,6 +242,8 @@ export function HomePage(): JSX.Element {
           trend={winrate >= 50 ? 'positive' : 'neutral'}
         />
       </div>
+
+      <StrategyMonitor telemetry={strategyTelemetry} running={running} />
 
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
