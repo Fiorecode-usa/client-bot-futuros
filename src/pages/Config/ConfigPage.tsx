@@ -12,7 +12,7 @@ export function ConfigPage(): JSX.Element {
   const { user, refreshUser } = useAuth();
   const [apiKey, setApiKey] = useState<string>('');
   const [apiSecret, setApiSecret] = useState<string>('');
-  const [riskPct, setRiskPct] = useState<number>(0.5);
+  const [riskPct, setRiskPct] = useState<number>(20);
   const [configured, setConfigured] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [info, setInfo] = useState<string>('');
@@ -157,19 +157,19 @@ export function ConfigPage(): JSX.Element {
       <div className={styles.card}>
         <h2 className={styles.cardTitle}>Riesgo por trade</h2>
         <p className={styles.cardDescription}>
-          Porcentaje máximo de tu equity en riesgo por operación. El Risk Engine
-          calcula el sizing y aplica el cap automáticamente.
+          Porcentaje máximo de tu equity en riesgo por operación (pérdida máxima
+          si salta el stop). Ejemplo: 20% con $100 ≈ $20 por trade; 25% con $20 ≈ $5.
         </p>
         <div className={styles.row}>
           <Input
             label="Riesgo %"
             type="number"
-            step="0.05"
-            min="0.05"
-            max="2"
+            step="1"
+            min="5"
+            max="25"
             value={String(riskPct)}
             onChange={(e) => setRiskPct(Number(e.target.value))}
-            hint="Rango permitido: 0.05% – 2.0%"
+            hint="Rango permitido: 5% – 25%. Mínimo de cuenta: $20 USDC."
           />
         </div>
         <div className={styles.cta}>
